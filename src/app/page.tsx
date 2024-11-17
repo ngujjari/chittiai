@@ -1,9 +1,11 @@
 import { getSystemDetails } from "@/lib/system"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
+import { CameraStream } from '../components/CameraStream';
 
 export default async function Home() {
   const systemInfo = await getSystemDetails();
+  const WS_URL = process.env.NEXT_PUBLIC_WS_URL || 'ws://raspberrypi.local:8765';
 
   return (
     <main className="min-h-screen bg-background flex flex-col items-center justify-center p-6">
@@ -54,6 +56,14 @@ export default async function Home() {
           </div>
         </CardContent>
       </Card>
+
+      <div className="max-w-7xl mx-auto py-12 px-4">
+        <div className="bg-white rounded-lg shadow-xl p-8">
+          <h1 className="text-3xl font-bold mb-8">Raspberry Pi Camera Control</h1>
+          <CameraStream wsUrl={WS_URL} />
+        </div>
+      </div>
+
     </main>
   );
 }
