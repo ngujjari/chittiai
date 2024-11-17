@@ -15,6 +15,8 @@ class CameraServer:
             display="lores"
         ))
         self.camera.start()
+        self.streaming = False
+        self.capturing = False
         time.sleep(2)  # Wait for camera to warm up
 
     async def capture_image(self):
@@ -31,15 +33,20 @@ class CameraServer:
                 command = data.get('command')
 
                 if command == 'capture':
+                    self.capturing = True
                     # Handle still image capture
                     image_data = await self.capture_image()
                     await websocket.send(json.dumps({
                         'type': 'image',
                         'data': image_data
                     }))
+                    self.capturing = False
+                elif command == 'stop_capture':
+                    self.capturing = False
                 elif command == 'stream':
                     # Handle video streaming
-                    while True:
+                    self.streaming = True
+                    while self.streaming:
                         stream = io.BytesIO()
                         self.camera.capture_file(stream, format='jpeg')
                         stream.seek(0)
@@ -49,8 +56,11 @@ class CameraServer:
                             'data': frame
                         }))
                         await asyncio.sleep(0.1)  # 10 FPS
+                elif command == 'stop_stream':
+                    self.streaming = False
         except websockets.exceptions.ConnectionClosed:
-            pass
+            self.streaming = False
+            self.capturing = False
 
     async def start_server(self):
         async with websockets.serve(self.handle_client, "0.0.0.0", 8765):
